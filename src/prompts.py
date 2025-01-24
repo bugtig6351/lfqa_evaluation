@@ -1,17 +1,34 @@
-FEW_SHOT_EXAMPLES_ASQA = """Given an ambiguous question, figure out its interpretations and answer them one by one. 
-Question: Who played bonnie in gone with the wind? 
-Answer: This question is ambiguous in terms of which version or adaptation of Gone with the Wind is being referred to. In order to figure out its interpretations, we need to consider different versions or adaptations of Gone with the Wind. Gone with the Wind has two versions or adaptations: the 1939 film Gone with the Wind or the 2008 musical Gone with the Wind. Therefore, this question has 2 interpretations: (1) Who played Bonnie in the 1939 film Gone with the Wind? (2) Who played Bonnie in the 2008 musical Gone with the Wind? The answers to all interpretations are: (1) The 1939 film Gone with the Wind’s character Bonnie was played by Eleanore Cammack "Cammie" King. (2) The 2008 musical Gone with the Wind’s character Bonnie was played by Leilah de Meza. 
+# instructions
 
-Given an ambiguous question, figure out its interpretations and answer them one by one. 
-Question: What is the second largest city in the usa? 
-Answer: This question is ambiguous in terms of the criteria being used to determine the second largest city in the USA. In order to figure out its interpretations, we need to consider different criteria to determine a city’s size. City size can be measured by two criteria: population or area. Therefore, this question has 2 interpretations: (1) What is the second largest city in the USA by population? (2) What is the second largest city in the USA by area? The answers to all interpretations are: (1) The second largest city in the USA by population is Los Angeles, California. (2) The second largest city in the USA by area is Juneau, Alaska. 
-"""
+TASK_INSTRUCTION = """Score the following llm output of a question answering task with respect to following aspects with 1 to 5 stars."""
+DATASET_INSTRUCTION = """The dataset is a Factoid Question-Answering dataset, specifically designed for evaluating factual precision and detailed comparative reasoning in AI-generated answers."""
+OUTPUT_INSTRUCTION = """Begin your evaluation by providing a short explanation. Be as objective as possible. After providing your explanation, please provide your evaluation by strictly following the JSON format such as: [[SCORE]] {"accuracy": 2, "informativeness": 3}."""
+ACC_INSTRUCTION = """Accuracy: determine the accuracy of the answers, verifying the correctness and reliability of the provided information.
+1 star means Incorrect information 
+2 stars means Partially correct information 
+3 stars means half correct information
+4 stars means Mostly correct information 
+5 stars means Perfectly correct information"""
+INF_INSTRUCTION = """Informativeness: examines whether the answers provide sufficient and meaningful information that useful to the user and relevant to the question.
+1 star means No information or irrelevant information
+2 star means Very little information
+3 stars means Some information
+4 stars means Enough information
+5 stars means Highly informative"""
+ACC_SHORT = """Accuracy: determine the accuracy of the answers, verifying the correctness and reliability of the provided information."""
+INF_SHORT = """Informativeness: examines whether the answers provide sufficient and meaningful information that useful to the user and relevant to the question."""
 
-PROMPT = """{few_shot_examples}\n\nGiven an ambiguous question, figure out its interpretations and answer them one by one.\nQuestion: {question}\nAnswer: """
+P1 = TASK_INSTRUCTION + DATASET_INSTRUCTION + OUTPUT_INSTRUCTION + '\n'+ACC_INSTRUCTION + '\n' + INF_INSTRUCTION
+P2 = TASK_INSTRUCTION + DATASET_INSTRUCTION + OUTPUT_INSTRUCTION
+P3 = TASK_INSTRUCTION + DATASET_INSTRUCTION + '\n'+ACC_INSTRUCTION + '\n' + INF_INSTRUCTION + '\n' + OUTPUT_INSTRUCTION
+P4 = OUTPUT_INSTRUCTION + TASK_INSTRUCTION + DATASET_INSTRUCTION + '\n'+ACC_INSTRUCTION + '\n' + INF_INSTRUCTION
+P5 = TASK_INSTRUCTION + OUTPUT_INSTRUCTION + '\n'+ACC_INSTRUCTION + '\n' + INF_INSTRUCTION
+P6 = DATASET_INSTRUCTION + OUTPUT_INSTRUCTION + '\n'+ACC_INSTRUCTION + '\n' + INF_INSTRUCTION
+P7 = OUTPUT_INSTRUCTION + '\n'+ACC_INSTRUCTION + '\n' + INF_INSTRUCTION+ '\n'  + TASK_INSTRUCTION + DATASET_INSTRUCTION
+P8 = DATASET_INSTRUCTION + TASK_INSTRUCTION + '\n'+ACC_SHORT + '\n' + INF_SHORT+ '\n' + OUTPUT_INSTRUCTION
+P9 = DATASET_INSTRUCTION + TASK_INSTRUCTION + '\n'+ACC_INSTRUCTION + '\n' + INF_INSTRUCTION+ '\n' + OUTPUT_INSTRUCTION
 
-SYSTEM_INSTRUCTION = """Please act as an impartial judge and evaluate the quality of the response provided by an AI assistant to the user question displayed below. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, and level of detail of the response. Begin your evaluation by providing a short explanation. Be as objective as possible. After providing your explanation, please rate the response on a scale of 1 to 10 by strictly following this format: [[rating]], for example: Rating: [[5]].
-"""
-
+## qa formats
 QA_REF = """[Question]
 {question}
 
@@ -30,6 +47,8 @@ QA = """[Question]
 {answer}
 [The End of Assistant’s Answer]"""
 
+
+# answer relevance
 ANSEWER_RELEVANCE_ANTIQUE = """Generate a question for the given answer. Please provide questions following this format: [[Question]]
 
 [[Answer]] Albert Einstein was born in Germany.
@@ -85,7 +104,32 @@ Generate several questions for the given [[Answer]], noting that the [[Answer]] 
 [[Answer]] {answer}
 """
 
-FG_SYSTEM = """Score the following llm output of a question answering task with respect to following aspects with 1 to 5 stars.
+# prompt bias
+
+SHORT_INSTRUCTION = """Provide a brief, objective explanation, then rate the response from 1 to 10 using the format: Rating: [[5]].
+"""
+
+NORMAL_INSTRUCTION = """Please act as an impartial judge and evaluate the quality of the response provided by an AI assistant to the user question displayed below. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, and level of detail of the response. Begin your evaluation by providing a short explanation. Be as objective as possible. After providing your explanation, please rate the response on a scale of 1 to 10 by strictly following this format: [[rating]], for example: Rating: [[5]].
+"""
+
+LONG_INSTRUCTION = """You are tasked with assuming the role of an impartial and objective evaluator, meticulously assessing the quality of the response generated by an AI assistant in direct relation to the user's query, which is explicitly outlined below. 
+
+In conducting your evaluation, you are expected to consider a comprehensive array of factors, including but not limited to:
+
+    - Helpfulness: The extent to which the response effectively addresses the user's question, providing clear, actionable, and useful information.
+    - Relevance: The degree to which the response remains focused on the specific topic or issue raised by the user, avoiding tangential or unrelated content.
+    - Accuracy: The factual correctness and reliability of the information provided in the response, ensuring that it aligns with established knowledge or evidence.
+    - Depth: The level of insight, analysis, or elaboration offered in the response, demonstrating a thorough understanding of the subject matter.
+    - Level of Detail: The amount of specific information, examples, or explanations included in the response, contributing to a richer and more informative answer.
+
+Your evaluation should begin with a concise yet comprehensive explanation of your assessment, highlighting the strengths and weaknesses of the AI assistant's response in relation to the aforementioned criteria. It is imperative that you maintain an objective and unbiased stance throughout this process, avoiding any personal opinions or subjective judgments.
+
+Upon completing your explanation, you are required to assign a numerical rating to the response, reflecting its overall quality. This rating must be provided on a scale ranging from 1 to 10, where 1 signifies a poor or inadequate response and 10 denotes an exceptional or outstanding one. The rating should be formatted strictly as follows: [[rating]], for example: Rating: [[5]].
+
+Please ensure that your evaluation is thorough, well-reasoned, and adheres to the guidelines outlined above.
+"""
+
+FINE_GRAINED_INSTRUCTION = """Score the following llm output of a question answering task with respect to following aspects with 1 to 5 stars.
 
 Accuracy: determine the accuracy of the answers, verifying the correctness and reliability of the provided information.
 1 star means Incorrect information 
@@ -103,8 +147,6 @@ Informativeness: examines whether the answers provide sufficient and meaningful 
 
 Begin your evaluation by providing a short explanation. Be as objective as possible. After providing your explanation, please provide your evaluation by strictly following the JSON format such as: [[SCORE]] {"accuracy": 2, "informativeness": 3}.
 """
-
-QUERY_CATEGORY_SYSTEM = """The question is related to the category of {category}, which means it expects answers with "{category_description}" """
 
 
 def gen_prompt(question, answer, ref=None, system_instruction=SYSTEM_INSTRUCTION, user_instruction=QA):
